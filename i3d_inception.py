@@ -14,24 +14,24 @@ import warnings
 
 import numpy as np
 
-from keras.models import Model
-from keras import layers
-from keras.layers import Activation
-from keras.layers import Dense
-from keras.layers import Input
-from keras.layers import BatchNormalization
-from keras.layers import Conv3D
-from keras.layers import MaxPooling3D
-from keras.layers import AveragePooling3D
-from keras.layers import Dropout
-from keras.layers import Reshape
-from keras.layers import Lambda
-from keras.layers import GlobalAveragePooling3D
+from tensorflow.keras.models import Model
+from tensorflow.keras import layers
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Conv3D
+from tensorflow.keras.layers import MaxPooling3D
+from tensorflow.keras.layers import AveragePooling3D
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import Reshape
+from tensorflow.keras.layers import Lambda
+from tensorflow.keras.layers import GlobalAveragePooling3D
 
-from keras.engine.topology import get_source_inputs
-from keras.utils import layer_utils
-from keras.utils.data_utils import get_file
-from keras import backend as K
+# from keras.engine.topology import get_source_inputs
+from tensorflow.python.keras.utils import layer_utils
+from tensorflow.python.keras.utils.data_utils import get_file
+from tensorflow.keras import backend as K
 
 WEIGHTS_NAME = ['rgb_kinetics_only', 'flow_kinetics_only', 'rgb_imagenet_and_kinetics', 'flow_imagenet_and_kinetics']
 

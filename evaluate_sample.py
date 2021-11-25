@@ -5,8 +5,17 @@ Evaluates a RGB and Flow sample similar to the paper's github repo: 'https://git
 
 import numpy as np
 import argparse
+import cv2
 
 from i3d_inception import Inception_Inflated3d
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU')
+try:
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+except:
+    pass
+
 
 NUM_FRAMES = 79
 FRAME_HEIGHT = 224
@@ -21,12 +30,33 @@ SAMPLE_DATA_PATH = {
     'flow' : 'data/v_CricketShot_g04_c01_flow.npy'
 }
 
+cap = cv2.VideoCapture('/home/alvaro/Área de Trabalho/keras-kinetics-i3d/data/v_CricketShot_g04_c01_rgb.gif')
+
 LABEL_MAP_PATH = 'data/label_map.txt'
 
 def main(args):
     # load the kinetics classes
     kinetics_classes = [x.strip() for x in open(LABEL_MAP_PATH, 'r')]
 
+    rgb_sample = np.load(SAMPLE_DATA_PATH['rgb'])
+    
+    video = []
+    count = 0
+    while True:
+        got, frame = cap.read()
+
+        if not got or len(video) == NUM_FRAMES:
+            video = np.array(video)
+            break
+
+        # if count % 8 == 0:
+        frame = cv2.resize(frame, (224,224))
+        frame_norm = (frame - np.amin(frame)) / (np.amax(frame) - np.amin(frame))
+        frame_norm = 2*frame_norm - 1
+        video.append(frame_norm)
+
+        count+=1 
+    video = video[np.newaxis, :, :, :]
 
     if args.eval_type in ['rgb', 'joint']:
         if args.no_imagenet_pretrained:
@@ -47,10 +77,10 @@ def main(args):
                 classes=NUM_CLASSES)
 
         # load RGB sample (just one example)
-        rgb_sample = np.load(SAMPLE_DATA_PATH['rgb'])
-        
+        # rgb_sample = np.load(SAMPLE_DATA_PATH['rgb'])
+
         # make prediction
-        rgb_logits = rgb_model.predict(rgb_sample)
+        rgb_logits = rgb_model.predict(video) # rbg_sample
 
 
     if args.eval_type in ['flow', 'joint']:
@@ -106,11 +136,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--eval-type', 
         help='specify model type. 1 stream (rgb or flow) or 2 stream (joint = rgb and flow).', 
-        type=str, choices=['rgb', 'flow', 'joint'], default='joint')
+        type=str, choices=['rgb', 'flow', 'joint'], default='rgb')
 
     parser.add_argument('--no-imagenet-pretrained',
         help='If set, load model weights trained only on kinetics dataset. Otherwise, load model weights trained on imagenet and kinetics dataset.',
-        action='store_true')
+        action='store_true', default='rgb_kinetics_only')
 
 
     args = parser.parse_args()

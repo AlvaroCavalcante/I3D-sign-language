@@ -24,10 +24,12 @@ def read_tfrecord(example_proto):
         height = 240
 
         image = tf.image.decode_jpeg(features[path], channels=3)
+        image = tf.cast(image, tf.float32) / 255.
+
         image = tf.image.resize(image, [width, height])
         image = tf.reshape(image, tf.stack([height, width, 3]))
         image = tf.reshape(image, [1, height, width, 3])
-        image = tf.cast(image, dtype='uint8')
+        # image = tf.cast(image, dtype='uint8')
         image_seq.append(image)
 
         label = tf.cast(features['label'], tf.int32)
@@ -42,7 +44,7 @@ def load_dataset(tf_record_path):
     return parsed_dataset 
 
 
-def prepare_for_training(ds, batch_size, shuffle_buffer_size=1000):
+def prepare_for_training(ds, batch_size, shuffle_buffer_size=500):
     ds.cache() # I can remove this to don't use cache or use cocodata.tfcache
     ds = ds.repeat()
     ds = ds.batch(batch_size)

@@ -45,25 +45,36 @@ def get_model():
 
     return model 
 
-model = get_model()
+def main(args):
+    model = get_model()
 
-train_fns = tf.io.gfile.glob('/home/alvaro/Documentos/video2tfrecord/example/output/*.tfrecords')
-validation_fns = tf.io.gfile.glob('/home/alvaro/Documentos/video2tfrecord/example/test/*.tfrecords')
+    train_fns = tf.io.gfile.glob(args.train_path)
+    validation_fns = tf.io.gfile.glob(args.val_path)
 
+    batch_size = args.batch_size
+    train_steps = 28142 // batch_size
+    validation_steps = 3742 // batch_size
 
-data_generator = {}
-data_generator['train'] = load_data_tfrecord(train_fns)
-data_generator['test'] = load_data_tfrecord(validation_fns)
+    data_generator = {}
+    data_generator['train'] = load_data_tfrecord(train_fns, batch_size)
+    data_generator['test'] = load_data_tfrecord(validation_fns, batch_size)
 
-batch_size = 2
-train_steps = 28142 // batch_size
-validation_steps = 3742 // batch_size
+    history = model.fit(
+        data_generator['train'],
+        steps_per_epoch=train_steps,
+        epochs=args.epochs,
+        validation_data=data_generator['test'],
+        validation_steps=validation_steps)
 
-history = model.fit(
-    data_generator['train'],
-    steps_per_epoch=train_steps,
-    epochs=1,
-    validation_data=data_generator['test'],
-    validation_steps=validation_steps)
+if __name__ == '__main__':
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--batch-size', type=int, default='64')
+    parser.add_argument('--epochs', type=int, default='1000')
+    parser.add_argument('--train-path', type=str)
+    parser.add_argument('--val-path', type=str)
 
-print(history)
+    args = parser.parse_args()
+    main(args)
+
+# '/home/alvaro/Documentos/video2tfrecord/example/output/*.tfrecords'

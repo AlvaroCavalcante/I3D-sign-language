@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np 
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-batch_size = 2
 
 def read_tfrecord(example_proto):   
     image_seq = []
@@ -43,7 +42,7 @@ def load_dataset(tf_record_path):
     return parsed_dataset 
 
 
-def prepare_for_training(ds, shuffle_buffer_size=50):
+def prepare_for_training(ds, batch_size, shuffle_buffer_size=50):
     ds.cache() # I can remove this to don't use cache or use cocodata.tfcache
     ds = ds.repeat()
     ds = ds.batch(batch_size)
@@ -54,7 +53,7 @@ def prepare_for_training(ds, shuffle_buffer_size=50):
     ds = ds.prefetch(AUTOTUNE)
     return ds
 
-def load_data_tfrecord(tfrecord_path):
+def load_data_tfrecord(tfrecord_path, batch_size):
     dataset = load_dataset(tfrecord_path)
-    dataset = prepare_for_training(dataset)
+    dataset = prepare_for_training(dataset, batch_size)
     return dataset

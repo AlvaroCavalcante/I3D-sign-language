@@ -60,3 +60,21 @@ def load_data_tfrecord(tfrecord_path, batch_size):
     dataset = load_dataset(tfrecord_path)
     dataset = prepare_for_training(dataset, batch_size)
     return dataset
+
+def visualize_imgs():
+    row = 4; col = 4
+    train_fns = tf.io.gfile.glob('/home/alvaro/Documentos/video2tfrecord/example/output/*.tfrecords')
+
+    all_elements = load_data_tfrecord(train_fns, 1).unbatch()
+    dataset = all_elements.repeat().batch(1)
+
+    for (seq, label) in dataset:
+        plt.figure(figsize=(15,int(15*row/col)))
+        for j in range(row*col):
+            plt.subplot(row,col,j+1)
+            plt.axis('off')
+            plt.imshow(np.array(seq[0, j,]))
+        plt.show()
+
+if __name__ == '__main__':
+    visualize_imgs()

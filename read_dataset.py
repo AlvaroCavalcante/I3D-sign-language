@@ -24,7 +24,8 @@ def read_tfrecord(example_proto):
         height = 240
 
         image = tf.image.decode_jpeg(features[path], channels=3)
-        image = tf.cast(image, tf.float32) / 255.
+        # image = tf.cast(image, tf.float32) / 255.
+        image = (tf.cast(image, tf.float32) / 127.5) - 1.0
 
         image = tf.image.resize(image, [width, height])
         image = tf.reshape(image, tf.stack([height, width, 3]))

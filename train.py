@@ -1,7 +1,4 @@
-import numpy as np
 import argparse
-import cv2
-from tensorflow.python.framework.tensor_conversion_registry import get
 
 from i3d_inception import Inception_Inflated3d
 from read_dataset import load_data_tfrecord
@@ -9,6 +6,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras import layers
 import tensorflow as tf
+import time 
 
 physical_devices = tf.config.list_physical_devices('GPU')
 try:
@@ -67,6 +65,7 @@ def main(args):
     data_generator['train'] = load_data_tfrecord(train_fns, batch_size)
     data_generator['test'] = load_data_tfrecord(validation_fns, batch_size)
 
+    start = time.time()
     history = model.fit(
         data_generator['train'],
         steps_per_epoch=train_steps,
@@ -74,6 +73,7 @@ def main(args):
         validation_data=data_generator['test'],
         validation_steps=validation_steps)
 
+    print('Fitting time: ', time.time() - start)
 if __name__ == '__main__':
     # parse arguments
     parser = argparse.ArgumentParser()

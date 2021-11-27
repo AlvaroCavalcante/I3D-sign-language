@@ -18,8 +18,6 @@ def read_tfrecord(example_proto):
 
         features = tf.io.parse_single_example(example_proto, features=feature_dict)
 
-        # width = tf.cast(features['width'], tf.int32)
-        # height = tf.cast(features['height'], tf.int32)
         width = 224
         height = 224
 
@@ -30,7 +28,6 @@ def read_tfrecord(example_proto):
         image = tf.image.resize(image, [width, height])
         image = tf.reshape(image, tf.stack([height, width, 3]))
         image = tf.reshape(image, [1, height, width, 3])
-        # image = tf.cast(image, dtype='uint8')
         image_seq.append(image)
 
         label = tf.cast(features['label'], tf.int32)

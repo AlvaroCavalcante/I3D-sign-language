@@ -20,8 +20,8 @@ def read_tfrecord(example_proto):
 
         # width = tf.cast(features['width'], tf.int32)
         # height = tf.cast(features['height'], tf.int32)
-        width = 240
-        height = 240
+        width = 224
+        height = 224
 
         image = tf.image.decode_jpeg(features[path], channels=3)
         # image = tf.cast(image, tf.float32) / 255.

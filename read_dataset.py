@@ -1,6 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np 
+from augmentation import transform_batch
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -22,8 +23,8 @@ def read_tfrecord(example_proto):
         height = 224
 
         image = tf.image.decode_jpeg(features[path], channels=3)
-        # image = tf.cast(image, tf.float32) / 255.
-        image = (tf.cast(image, tf.float32) / 127.5) - 1.0
+        image = tf.cast(image, tf.float32) / 255.
+        # image = (tf.cast(image, tf.float32) / 127.5) - 1.0
 
         image = tf.image.resize(image, [width, height])
         image = tf.reshape(image, tf.stack([height, width, 3]))
@@ -41,11 +42,13 @@ def load_dataset(tf_record_path):
     parsed_dataset = raw_dataset.map(read_tfrecord, num_parallel_calls=AUTOTUNE)
     return parsed_dataset 
 
-
-def prepare_for_training(ds, batch_size, shuffle_buffer_size=250):
+def prepare_for_training(ds, batch_size, shuffle_buffer_size=250, augmentation=False):
     ds.cache() # I can remove this to don't use cache or use cocodata.tfcache
     ds = ds.repeat()
     ds = ds.batch(batch_size)
+
+    if augmentation:
+        ds = ds.map(transform_batch, num_parallel_calls=AUTOTUNE)
 
     ds = ds.unbatch()
     ds = ds.shuffle(buffer_size=shuffle_buffer_size)

@@ -4,7 +4,7 @@ from tensorflow.python.keras.utils.generic_utils import default
 
 from i3d_inception import Inception_Inflated3d
 from read_dataset import load_data_tfrecord
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras import layers
 import tensorflow as tf
@@ -27,30 +27,33 @@ def lr_time_based_decay(epoch, lr, nb_epoch=1):
     decay = lr / nb_epoch
     return lr * 1 / (1 + decay * epoch)
 
-def get_model(freeze, lr):
-    rgb_model = Inception_Inflated3d(
-        include_top=False,
-        weights='rgb_imagenet_and_kinetics',
-        input_shape=(NUM_FRAMES, FRAME_HEIGHT, FRAME_WIDTH, NUM_RGB_CHANNELS),
-        classes=NUM_CLASSES)
+def get_model(freeze, lr, checkpoint_path):
+    if not checkpoint_path:
+        rgb_model = Inception_Inflated3d(
+            include_top=False,
+            weights='rgb_imagenet_and_kinetics',
+            input_shape=(NUM_FRAMES, FRAME_HEIGHT, FRAME_WIDTH, NUM_RGB_CHANNELS),
+            classes=NUM_CLASSES)
 
-    if freeze:
-        rgb_model.trainable = False
+        if freeze:
+            rgb_model.trainable = False
+        else:
+            for layer in rgb_model.layers[50:]:
+                if not isinstance(layer, layers.BatchNormalization):
+                    layer.trainable = True
+
+        x = rgb_model.output
+        x = Dense(512, activation='elu', name='fc1')(x)
+        x = Dropout(0.4)(x)
+        x = Dense(256, activation='elu', name='fc2')(x)
+        x = Dropout(0.3)(x)
+        x = Dense(128, activation='elu', name='fc3')(x)
+        x = Dropout(0.3)(x)
+        predictions = Dense(NUM_CLASSES, activation='softmax', name='predictions')(x)
+
+        model = Model(rgb_model.input, predictions)
     else:
-        for layer in rgb_model.layers[50:]:
-            if not isinstance(layer, layers.BatchNormalization):
-                layer.trainable = True
-
-    x = rgb_model.output
-    x = Dense(512, activation='elu', name='fc1')(x)
-    x = Dropout(0.4)(x)
-    x = Dense(256, activation='elu', name='fc2')(x)
-    x = Dropout(0.3)(x)
-    x = Dense(128, activation='elu', name='fc3')(x)
-    x = Dropout(0.3)(x)
-    predictions = Dense(NUM_CLASSES, activation='softmax', name='predictions')(x)
-
-    model = Model(rgb_model.input, predictions)
+        model = load_model(checkpoint_path)
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
@@ -61,7 +64,7 @@ def get_model(freeze, lr):
     return model 
 
 def main(args):
-    model = get_model(args.freeze, args.learning_rate)
+    model = get_model(args.freeze, args.learning_rate, args.checkpoint_path)
 
     train_fns = tf.io.gfile.glob(args.train_path)
     validation_fns = tf.io.gfile.glob(args.val_path)
@@ -101,6 +104,7 @@ if __name__ == '__main__':
     parser.add_argument('--freeze', type=bool, default=True)
     parser.add_argument('--output-path', type=str, default='./')
     parser.add_argument('--learning-rate', type=float, default=0.1)
+    parser.add_argument('--checkpoint-path', type=str, default=None)
 
     args = parser.parse_args()
     main(args)

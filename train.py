@@ -29,6 +29,8 @@ def lr_time_based_decay(epoch, lr, nb_epoch=1):
 
 def get_model(freeze, lr, checkpoint_path):
     if not checkpoint_path:
+        print('Creating a new model')
+
         rgb_model = Inception_Inflated3d(
             include_top=False,
             weights='rgb_imagenet_and_kinetics',
@@ -53,6 +55,7 @@ def get_model(freeze, lr, checkpoint_path):
 
         model = Model(rgb_model.input, predictions)
     else:
+        print('Loading Pre-trained model')
         model = load_model(checkpoint_path)
 
     model.compile(

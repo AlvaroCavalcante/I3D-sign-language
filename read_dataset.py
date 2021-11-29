@@ -5,6 +5,16 @@ from augmentation import transform_batch
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
+def center_crop(img, dims):
+	width, height = img.shape[1], img.shape[0]
+
+	crop_width = dims[0] if dims[0] < img.shape[1] else img.shape[1]
+	crop_height = dims[1] if dims[1] < img.shape[0] else img.shape[0] 
+	mid_x, mid_y = int(width/2), int(height/2)
+	cw2, ch2 = int(crop_width/2), int(crop_height/2) 
+	crop_img = img[mid_y-ch2:mid_y+ch2, mid_x-cw2:mid_x+cw2]
+	return crop_img
+
 def read_tfrecord(example_proto):   
     image_seq = []
 
@@ -23,10 +33,12 @@ def read_tfrecord(example_proto):
         height = 224
 
         image = tf.image.decode_jpeg(features[path], channels=3)
+        image = tf.image.resize(image, [256, 256])
+        image = center_crop(image, (width, height))
+
         # image = tf.cast(image, tf.float32) / 255.
         image = (tf.cast(image, tf.float32) / 127.5) - 1.0
 
-        image = tf.image.resize(image, [width, height])
         image = tf.reshape(image, tf.stack([height, width, 3]))
         image = tf.reshape(image, [1, height, width, 3])
         image_seq.append(image)

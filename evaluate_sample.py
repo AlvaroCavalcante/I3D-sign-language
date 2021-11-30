@@ -34,6 +34,23 @@ cap = cv2.VideoCapture('/home/alvaro/Área de Trabalho/keras-kinetics-i3d/data/v
 
 LABEL_MAP_PATH = 'data/label_map.txt'
 
+def center_crop(img, dim):
+	"""Returns center cropped image
+	Args:
+	img: image to be center cropped
+	dim: dimensions (width, height) to be cropped
+	"""
+	width, height = img.shape[1], img.shape[0]
+
+	# process crop width and height for max available dimension
+	crop_width = dim[0] if dim[0]<img.shape[1] else img.shape[1]
+	crop_height = dim[1] if dim[1]<img.shape[0] else img.shape[0] 
+	mid_x, mid_y = int(width/2), int(height/2)
+	cw2, ch2 = int(crop_width/2), int(crop_height/2) 
+	crop_img = img[mid_y-ch2:mid_y+ch2, mid_x-cw2:mid_x+cw2]
+	return crop_img
+
+
 def main(args):
     # load the kinetics classes
     kinetics_classes = [x.strip() for x in open(LABEL_MAP_PATH, 'r')]
@@ -50,10 +67,13 @@ def main(args):
             break
 
         # if count % 8 == 0:
-        frame = cv2.resize(frame, (224,224))
-        frame_norm = (frame - np.amin(frame)) / (np.amax(frame) - np.amin(frame))
-        frame_norm = 2*frame_norm - 1
-        video.append(frame_norm)
+        frame = cv2.resize(frame, (256,256))
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = center_crop(frame, (224,224))
+        # frame_norm = (frame - np.amin(frame)) / (np.amax(frame) - np.amin(frame))
+        # frame_norm = 2*frame_norm - 1
+        frame_norm = (tf.cast(frame, tf.float32) / 127.5) - 1.0
+        video.append(np.array(frame_norm, dtype='float32'))
 
         count+=1 
     video = video[np.newaxis, :, :, :]
@@ -77,7 +97,24 @@ def main(args):
                 classes=NUM_CLASSES)
 
         # load RGB sample (just one example)
-        # rgb_sample = np.load(SAMPLE_DATA_PATH['rgb'])
+        rgb_sample = np.load(SAMPLE_DATA_PATH['rgb'])
+        import matplotlib.pyplot as plt
+        row = 4
+        col = 4
+
+        plt.figure(figsize=(15,int(15*row/col)))
+        for j in range(row*col):
+            plt.subplot(row,col,j+1)
+            plt.axis('off')
+            plt.imshow(np.array((rgb_sample[0][j] + 1)/2))
+        plt.show()
+
+        plt.figure(figsize=(15,int(15*row/col)))
+        for j in range(row*col):
+            plt.subplot(row,col,j+1)
+            plt.axis('off')
+            plt.imshow(np.array((video[0][j] + 1)/2))
+        plt.show()
 
         # make prediction
         rgb_logits = rgb_model.predict(video) # rbg_sample

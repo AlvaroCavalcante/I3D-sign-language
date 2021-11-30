@@ -37,18 +37,13 @@ def get_model(freeze, lr, checkpoint_path):
             input_shape=(NUM_FRAMES, FRAME_HEIGHT, FRAME_WIDTH, NUM_RGB_CHANNELS),
             classes=NUM_CLASSES)
 
-        if freeze:
-            rgb_model.trainable = False
-        else:
-            for layer in rgb_model.layers[50:]:
-                if not isinstance(layer, layers.BatchNormalization):
-                    layer.trainable = True
+        rgb_model.trainable = False
 
         x = rgb_model.output
         x = Dense(512, activation='elu', name='fc1')(x)
-        x = Dropout(0.4)(x)
-        x = Dense(256, activation='elu', name='fc2')(x)
         x = Dropout(0.3)(x)
+        x = Dense(256, activation='elu', name='fc2')(x)
+        x = Dropout(0.2)(x)
         x = Dense(128, activation='elu', name='fc3')(x)
         x = Dropout(0.3)(x)
         predictions = Dense(NUM_CLASSES, activation='softmax', name='predictions')(x)
@@ -57,6 +52,11 @@ def get_model(freeze, lr, checkpoint_path):
     else:
         print('Loading Pre-trained model')
         model = load_model(checkpoint_path)
+
+    if not freeze:
+        for layer in model.layers[80:]:
+            if not isinstance(layer, layers.BatchNormalization):
+                layer.trainable = True
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=lr),

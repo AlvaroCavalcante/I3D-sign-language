@@ -1,54 +1,21 @@
-# keras-kinetics-i3d
+# keras-kinetics-i3d for sign language
 Keras implementation (including pretrained weights) of Inflated 3d Inception architecture reported in the paper [Quo Vadis, Action Recognition? A New Model and the Kinetics Dataset](https://arxiv.org/abs/1705.07750).
 
-Original implementation by the authors can be found in this [repository](https://github.com/deepmind/kinetics-i3d).
+Original implementation by the authors can be found in this [repository](https://github.com/deepmind/kinetics-i3d). The keras implementation was got from this [repository](https://github.com/dlpbc/keras-kinetics-i3d).
 
-# Sample Data (for Evaluation)
-Similar to the original implementation, we evaluate the keras models using the RGB sample and Optical Flow sample (processed from video data) provided in the repository of the authors (see the **data/** directory). Details about the [preprocessing techniques](https://github.com/deepmind/kinetics-i3d#sample-data-and-preprocessing) applied to the data are specified in the authors' repository.
+## Scripts description
 
-# Usage
-```
-python evaluate_sample.py
+This repository aims to use the Keras implementation of I3D to train a sign language recognition system. The **i3d_inception.py** file contains the implementation of the CNN architecture used to train the model.
 
-or
+**evaluate_sample.py** contains a script to test the model inference in a video sample.
 
-[For help]
-python evaluate_sample.py -h
-```
+**read_dataset.py** is the auxiliar code used to read the data from TFRecords using the TFData API. It can also be used to show some samples (frames) of data.
 
-With default flags settings, the `evaluate_sample.py` script builds two I3d Inception architecture (2 stream: RGB and Optical Flow), loads their respective pretrained weights and evaluates RGB sample and Optical Flow sample obtained from video data.  
+**augmentation.py** contains the math operations to transform the images during the training time.
 
-You can set flags to evaluate model using only one I3d Inception architecture (RGB or Optical Flow) as shown below:
+**train.py** is the code used to build the archtecture and start the model training process.
 
-```
-# For RGB
-python evaluate_sample.py --eval-type rgb
+## Data Preparation
+The initial dataset used in the I3D training was the AUTSL. The videos was downloaded from this [link](https://chalearnlap.cvc.uab.cat/dataset/40/description/). After downloading the data, it's necessary  to convert the videos into TFRecord format. To do so, the script in this [repository](https://github.com/AlvaroCavalcante/video2tfrecord/tree/optimized-video2record) was used, in the branch **optimized-video2record**.
 
-# For Optical Flow
-python evaluate_sample.py --eval-type flow
-```
-
-Addtionally, as described in the paper (and the authors repository), there are two types of pretrained weights for RGB and Optical Flow models respectively. These are;
-- RGB I3d Inception: 
-    - Weights Pretrained on Kinetics dataset only
-    - Weights pretrained on Imagenet and Kinetics datasets
-- Optical Flow I3d Inception:
-    - Weights Pretrained on Kinetics dataset only
-    - Weights pretrained on Imagenet and Kinetics datasets
-
-The above usage examples loads weights pretrained on Imagenet and Kinetics datasets. To load weight pretrained on Kinetics dataset only add the flag **--no-imagenet-pretrained** to the above commands. See an example below:
-
-```
-
-# RGB I3d Inception model pretrained on kinetics dataset only
-python evaluate_sample.py --eval-type rgb --no-imagenet-pretrained
-```
-
-# Requirements
-- Keras
-- Keras Backend: Tensorflow (tested) or Theano (not tested) or CNTK (not tested)
-- h5py
-
-# License
-- All code in this repository are licensed under the MIT license as specified by the LICENSE file.
-- The i3d (rgb and flow) pretrained weights were ported from the ones released [Deepmind](https://deepmind.com) in this [repository](https://github.com/deepmind/kinetics-i3d) under [Apache-2.0 License](https://github.com/deepmind/kinetics-i3d/blob/master/LICENSE)
+After transforming all the videos into TFRecords, we can start the model training. To do so, we used the following [colab notebook](https://colab.research.google.com/drive/157WZf6oUq36OPz327t028Z-JJzOuuM2s?usp=sharing).
